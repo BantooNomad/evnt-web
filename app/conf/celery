@@ -1,0 +1,39 @@
+CELERY -- flask
+NGINX + Gunicorn + uWSGI + Gevent - (nginx)
+Entry Point --> flask app
+
+*-----------*
+|			|
+|   flask	|------
+|			|     |
+*-----------*     |
+      |           |
+      |           v
+      |       *--------*                     +----------+
+      |       |        |                     |          |
+      |       | flask  >--- Enqueue tasks ---> RabbitMQ >-----
+      |       |        |                     | (Broker) |     |
+      |       *---v----*                     +----------+     |
+      |           |                                           |
+      |           | Query                    *----------*     |
+      |           |                          |  Celery  <-----+
+      |         +-v----------+  .-- Events --<  Worker  |     |
+      |         |            | /             *----------*     | Consume
+      |         |  MongoDB   <=                               | & Run Tasks
+      |         |            | \             *----------*     |
+      |         +------------+  `-- Events --<  Celery  |     |
+      |                                      |  Worker  <-----'
+      |                                      *----------*
+      | query
+      |
+      |
+      |
+      |
+      |
+      |
+      v
+*-----------*
+|           |
+|  elastic  |
+|           |
+*-----------*

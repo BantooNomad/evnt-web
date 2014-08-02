@@ -1,0 +1,51 @@
+#!/bin/bash
+# system IP/set ip address of server
+
+SERVER_IP="95.85.14.116"
+IPT="/sbin/iptables"
+
+# Flushing all rules
+iptables -F
+iptables -X
+
+# Setting default filter policy
+iptables -P INPUT DROP
+iptables -P OUTPUT DROP
+iptables -P FORWARD DROP
+
+# by default drop and input and output except
+# 80, 443 and 22
+
+# exceptions
+$IPT -A RH-Firewall-1-INPUT -m tcp -p tcp --dport 80 -j ACCEPT
+$IPT -A RH-Firewall-1-OUTPUT -m tcp -p tcp --dport 80 -j ACCEPT
+
+$IPT -A RH-Firewall-1-INPUT -m tcp -p tcp --dport 443 -j ACCEPT
+$IPT -A RH-Firewall-1-OUTPUT -m tcp -p tcp --dport 443 -j ACCEPT
+
+$IPT -A RH-Firewall-1-INPUT -m state --state NEW, ESTABLISHED -p tcp --dport 22 -j ACCEPT
+$IPT -A RH-Firewall-1-OUTPUT -m state --state NEW, ESTABLISHED -p tcp --dport 22 -j ACCEPT
+
+
+$IPT -A INPUT -p tcp --dport 22 -j ACCEPT
+$IPT -A OUTPUT -p tcp --sport 22 -j ACCEPT
+
+# set limits for 100 connecions per IP
+$IPT -A INPUT -p tcp --dport 80 -i eth0 -m state --state NEW -m recent --set
+$IPT -A INPUT -p tcp --dport 80 -i eth0 -m state --state NEW -m recent --update --seconds 60  --hitcount 15 -j DROP
+
+# allow pings
+$IPT -A INPUT -p icmp --icmp-type echo-request -j ACCEPT
+$IPT -A OUTPUT -p icmp --icmp-type echo-reply -j ACCEPT
+
+# allow loopback access for reverse proxing
+$IPT -A INPUT -i lo -j ACCEPT
+$IPT -A OUTPUT -o lo -j ACCEPT
+
+# reduce dDos attacks
+$IPT -A INPUT -p tcp --dport 80 -m limit --limit 25/minute --limit-burst 100 -j ACCEPT
+
+# stupid load balance
+$IPT -A PREROUTING -i eth0 -p tcp --dport 443 -m state --state NEW -m nth--counter 0 --every 3 --packet 0 -j DNAT --to-destination 127.0.0.1:5000
+$IPT -A PREROUTING -i eth0 -p tcp --dport 443 -m state --state NEW -m nth--counter 0 --every 3 --packet 1 -j DNAT --to-destination 127.0.0.1:5001
+$IPT -A PREROUTING -i eth0 -p tcp --dport 443 -m state --state NEW -m nth--counter 0 --every 3 --packet 2 -j DNAT --to-destination 127.0.0.1:5002
