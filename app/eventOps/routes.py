@@ -21,7 +21,6 @@ import hashlib
 from random import randint
 
 import requests
-from mail import sendMail
 
 
 @app.route('/admin/', methods=['POST', 'GET'])
@@ -72,7 +71,7 @@ def signIn():
     try:
         user = r.table('UsersInfo').get(username).run(g.rdb_conn)
     except Exception, e:
-        logging.warning('DB signIn failed on /api/signIn/ -> user not found')
+        logging.warning('DB signIn failed on /api/signIn/ - user Not Found')
         raise e
 
     if user is None:
@@ -141,9 +140,8 @@ def getRandID():
         return resp
 
     SMScode = randint(10000, 99999)
-    sendMail.sendMail(email, SMScode, username)
+    # sendMail.sendMail(email, SMScode, username)
 
-    # verify user send email with code
     hashed_password = hashlib.sha512(password + salt).hexdigest()
 
     try:
