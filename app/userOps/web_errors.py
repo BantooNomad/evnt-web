@@ -1,13 +1,11 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# res/ rep cycle
 from app import app
 from app import r
 from app import g
 from app import logging
 from app import salt
-
 
 from flask import (render_template)
 from flask import redirect, make_response

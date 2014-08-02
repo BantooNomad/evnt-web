@@ -1,14 +1,12 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# res/ rep cycle
 
 from app import app
 from app import r
 from app import g
 from app import logging
 from app import salt
-#from app import cursor
 from app import RqlError
 
 from flask import (render_template, json)
@@ -26,7 +24,6 @@ from random import randint
 
 import time
 from datetime import datetime
-from mail import sendMail
 
 
 @app.route('/profile/<username>/', methods=['POST', 'GET'])
@@ -105,7 +102,6 @@ def removeUser():
     password = request.json.get('password')
     username = request.json.get('username')
 
-    # mobile no is the id - primary key
     try:
         r.table('UsersInfo').get(username).delete().run(g.rdb_conn)
     except RqlError:
@@ -129,13 +125,11 @@ def addUser():
     fname = request.json.get('fname')
     lname = request.json.get('lname')
     username = request.json.get('username')
-    mobileNo = request.json.get('mobileNo')  # this <- id
+    mobileNo = request.json.get('mobileNo')
     state = request.json.get('state')
     location = request.json.get('location')
     email = request.json.get('email')
 
-    # no id just work with mobileNo - easier
-    # we'll send a text message enter code!
 
     if mobileNo.startswith('0'):
         mobileNo = mobileNo[1:]
@@ -196,8 +190,7 @@ def forgotPassword():
             r.table('UsersInfo').get(
                 username).update({"password": hashed_password}).run(g.rdb_conn)
 
-            sendMail.passwordReset(email, new_password)
-
+            # sendMail.passwordReset(email, new_password)
         except RqlError:
             logging.warning('DB pass reset failed on /reset/')
 
