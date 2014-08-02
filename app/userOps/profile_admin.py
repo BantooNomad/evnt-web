@@ -16,7 +16,6 @@ from flask import abort, request
 from flask import session
 from datetime import timedelta
 from json import dumps
-
 import os
 import logging
 import hashlib
